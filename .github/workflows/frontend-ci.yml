@@ -2,9 +2,9 @@ name: Frontend CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "*" ]   # run on any branch for now
   pull_request:
-    branches: [ main ]
+    branches: [ "*" ]
 
 jobs:
   build:
@@ -25,6 +25,7 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: frontend
@@ -34,3 +35,12 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+      - name: Lint code (non-blocking)
+        working-directory: frontend
+        run: npm run lint || true
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: bejite-frontend-build
+          path: frontend/dist
