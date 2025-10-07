@@ -3,21 +3,35 @@ name: DevOps CI - Full Stack Integration
 on:
   push:
     branches:
-      - docker-compose-setup   # ✅ Only trigger for your current working branch
+      - docker-compose-setup   # ✅ only run on this branch to prevent duplicates
 
 jobs:
   fullstack-integration:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # ---------- Checkout all repos ----------
+      - name: Checkout DevOps repo
         uses: actions/checkout@v4
+
+      - name: Checkout Frontend repo
+        uses: actions/checkout@v4
+        with:
+          repository: Elilaw179/bejitetest     # 👈 your frontend repo
+          path: ../Bejitetest
+
+      - name: Checkout Backend repo
+        uses: actions/checkout@v4
+        with:
+          repository: Elilaw179/Bejite_UX_2025 # 👈 your backend repo
+          path: ../Bejite_UX_2025
+
+      # ---------- Docker setup ----------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Verify docker-compose file exists
         run: ls -l
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Build and run Docker Compose
         run: docker compose -f docker-compose.yml up --build -d
