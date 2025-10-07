@@ -2,29 +2,29 @@ name: DevOps CI - Full Stack Integration
 
 on:
   push:
-    branches: ["*"]
-  pull_request:
-    branches: ["*"]
+    branches:
+      - docker-compose-setup   # ✅ Only trigger for your current working branch
 
 jobs:
-  build-and-test:
+  fullstack-integration:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Verify docker-compose file exists
+        run: ls -l
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build and run Docker Compose
-        run: |
-          docker compose up --build -d
-          sleep 20  # allow services to start
+        run: docker compose -f docker-compose.yml up --build -d
 
       - name: Verify running containers
         run: docker ps -a
 
       - name: Tear down environment
         if: always()
-        run: docker compose down
+        run: docker compose -f docker-compose.yml down
