@@ -1,0 +1,30 @@
+name: DevOps CI - Full Stack Integration
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and run Docker Compose
+        run: |
+          docker compose up --build -d
+          sleep 20  # allow services to start
+
+      - name: Verify running containers
+        run: docker ps -a
+
+      - name: Tear down environment
+        if: always()
+        run: docker compose down
