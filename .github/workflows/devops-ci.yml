@@ -36,7 +36,7 @@ jobs:
       # 5️⃣ Build and start the containers (backend uses 'prod' stage)
       - name: Build and run Docker Compose
         run: |
-          docker compose -f docker-compose.yml up --build -d
+          docker compose -f docker-compose.ci.yml up --build -d
 
       # 6️⃣ Check running containers
       - name: Verify containers are running
@@ -49,4 +49,4 @@ jobs:
       # 8️⃣ Shut down containers after build
       - name: Shut down containers
         if: always()
-        run: docker compose -f docker-compose.yml down -v
+        run: docker compose -f docker-compose.ci.yml down -v
