@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - "main"
-      - "docker-compose-setup"     
+      - "docker-compose-setup"
   pull_request:
-    branches: 
+    branches:
       - "main"
 
 permissions:
@@ -37,8 +37,9 @@ jobs:
       # ---------- 4️⃣ Build and Run Containers ----------
       - name: Build and Run Services
         run: |
+          echo "🚀 Building and starting containers..."
           docker compose -f docker-compose.ci.yml up --build -d
-          echo "✅ All containers started successfully"
+          echo "✅ Containers started successfully"
           docker ps -a
 
       # ---------- 5️⃣ Wait for DB health check ----------
@@ -48,16 +49,32 @@ jobs:
           sleep 15
           docker logs $(docker ps -qf name=db) || true
 
-      # ---------- 6️⃣ Verify Connectivity ----------
+      # ---------- 6️⃣ Verify Backend Connection ----------
       - name: Verify Backend Connection to DB
         run: |
-          docker logs $(docker ps -qf name=backend) | grep PostgreSQL || true
+          echo "🔍 Checking backend logs for PostgreSQL connection..."
+          docker logs $(docker ps -qf name=backend) | grep -E "PostgreSQL|connected" || true
 
-      # ---------- 7️⃣ Run optional integration tests ----------
-      # (You can add curl or test commands here if needed)
+      # ---------- 7️⃣ (Optional) Run Integration Tests ----------
+      # - name: Run integration tests
+      #   run: |
+      #     curl -f http://localhost:5000/health || exit 1
 
-      # ---------- 8️⃣ Teardown ----------
+      # ---------- 8️⃣ Upload Logs on Failure ----------
+      - name: Upload Docker Logs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs
+          path: |
+            $(docker logs $(docker ps -qf name=backend) > backend.log)
+            $(docker logs $(docker ps -qf name=db) > db.log)
+            backend.log
+            db.log
+
+      # ---------- 9️⃣ Stop and Clean Up ----------
       - name: Stop and Clean Up
         if: always()
         run: |
+          echo "🧹 Cleaning up..."
           docker compose -f docker-compose.ci.yml down -v
