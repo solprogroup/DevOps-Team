@@ -1,0 +1,53 @@
+services:
+  frontend:
+    build:
+      context: ../Bejitetest
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - bejite-network
+
+  backend:
+    build:
+      context: ../Bejite_UX_2025
+      dockerfile: Dockerfile
+      target: dev           # 👈 build the dev stage (with debug tools)
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/bejite
+      - NODE_ENV=development
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - bejite-network
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bejite
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bejite-network
+
+volumes:
+  db_data:
+
+networks:
+  bejite-network:
+    driver: bridge

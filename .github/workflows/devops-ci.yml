@@ -1,44 +1,52 @@
-name: DevOps CI - Full Stack Integration
+name: DevOps CI
 
 on:
   push:
     branches:
-      - docker-compose-setup   # ✅ only run on this branch to prevent duplicates
+      - main
+      - docker-compose-setup
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  fullstack-integration:
+  build:
+    name: 🛠️ Build Full Stack
     runs-on: ubuntu-latest
 
     steps:
-      # ---------- Checkout all repos ----------
-      - name: Checkout DevOps repo
+      # 1️⃣ Checkout this DevOps repo
+      - name: Checkout DevOps repository
         uses: actions/checkout@v4
 
-      - name: Checkout Frontend repo
-        uses: actions/checkout@v4
-        with:
-          repository: Elilaw179/bejitetest     # 👈 your frontend repo
-          path: ../Bejitetest
+      # 2️⃣ Clone the frontend repo
+      - name: Clone frontend repository
+        run: |
+          git clone https://github.com/Elilaw179/bejitetest.git ./Bejitetest
 
-      - name: Checkout Backend repo
-        uses: actions/checkout@v4
-        with:
-          repository: Elilaw179/Bejite_UX_2025 # 👈 your backend repo
-          path: ../Bejite_UX_2025
+      # 3️⃣ Clone the backend repo
+      - name: Clone backend repository
+        run: |
+          git clone https://github.com/solprogroup/Bejite_UX_2025.git ./Bejite_UX_2025
 
-      # ---------- Docker setup ----------
+      # 4️⃣ Set up Docker Buildx (for multi-stage builds)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Verify docker-compose file exists
-        run: ls -l
-
+      # 5️⃣ Build and start the containers (backend uses 'prod' stage)
       - name: Build and run Docker Compose
-        run: docker compose -f docker-compose.yml up --build -d
+        run: |
+          docker compose -f docker-compose.yml up --build -d
 
-      - name: Verify running containers
-        run: docker ps -a
+      # 6️⃣ Check running containers
+      - name: Verify containers are running
+        run: docker ps
 
-      - name: Tear down environment
+      # 7️⃣ Optional: Log backend container output (for debugging)
+      - name: Show backend logs
+        run: docker logs $(docker ps -qf "name=backend")
+
+      # 8️⃣ Shut down containers after build
+      - name: Shut down containers
         if: always()
-        run: docker compose -f docker-compose.yml down
+        run: docker compose -f docker-compose.yml down -v

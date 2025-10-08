@@ -1,11 +1,13 @@
+version: "3.9"
+
 services:
   # ---------- FRONTEND ----------
   frontend:
-    build: 
-      context: ../Bejitetest         # 👈 path to your frontend repo
+    build:
+      context: ./Bejitetest
       dockerfile: Dockerfile
     ports:
-      - "3000:80"                    # host:container (React via Nginx)
+      - "3000:80"
     depends_on:
       - backend
     networks:
@@ -14,18 +16,16 @@ services:
   # ---------- BACKEND ----------
   backend:
     build:
-      context: ../Bejite_UX_2025     # 👈 path to your backend repo
+      context: ./Bejite_UX_2025
       dockerfile: Dockerfile
+      target: prod
     ports:
       - "5000:5000"
     environment:
-      # 👇 Internal Docker URL — note: "db" instead of "localhost"
-      - SUPABASE_DATABASE_URL=postgres://postgres:postgres@db:5432/bejite
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/bejite
       - NODE_ENV=production
-      - DOCKER_ENV=true              # 👈 tells db.js it's inside Docker
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     networks:
       - bejite-network
 
@@ -43,11 +43,6 @@ services:
       - "5432:5432"
     networks:
       - bejite-network
-    healthcheck:                      # 👈 ensures Postgres is ready before backend starts
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 # ---------- VOLUMES ----------
 volumes:

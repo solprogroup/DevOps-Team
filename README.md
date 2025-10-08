@@ -58,3 +58,7 @@ The following will be introduced incrementally:
 ## 👨‍💻 Maintainers
 - DevOps Engineers:
 - Bejite Development Team
+
+## Run locally:
+- docker compose -f docker-compose.local.yml up --build
+- CI/CD runs automatically with docker-compose.ci.yml
